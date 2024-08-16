@@ -205,6 +205,17 @@ class AdminsController {
         try {
             const { id } = req.params;
 
+            // Part 1
+
+            // const { error } = validateAdmin(req.body);
+            // if (error) {
+            //     return res.status(400).json({
+            //         msg: error.details[0].message,
+            //         variant: "error",
+            //         payload: null,
+            //     });
+            // }
+
             const existingAdmin = await Admins.findOne({
                 username: req.body.username,
             });
