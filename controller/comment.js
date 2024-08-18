@@ -1,18 +1,18 @@
-import { Category, validateCategory } from "../models/categoryScheme.js";
+import { Comment, validateComment } from "../models/commentScheme.js";
 import { Admins } from "../models/adminScheme.js";
 
-class CategoriesController {
-  async getCategories(req, res) {
+class CommentsController {
+  async getComments(req, res) {
     try {
-      const categories = await Category.find().populate([
+      const comments = await Comment.find().populate([
         { path: "adminId", select: ["fname", "username"] },
       ]);
-      const totalCount = await Category.countDocuments();
+      const totalCount = await Comment.countDocuments();
 
       res.status(200).json({
         variant: "success",
-        msg: "All categories",
-        payload: categories,
+        msg: "All comments",
+        payload: comments,
         totalCount,
       });
     } catch (error) {
@@ -23,38 +23,13 @@ class CategoriesController {
       });
     }
   }
-  async getCategoryById(req, res) {
+
+  async createComment(req, res) {
     try {
-      let category = await Category.findById(req.params.id);
-
-      if (!category) {
-        return res.status(400).json({
-          variant: "error",
-          msg: "Category not found",
-          payload: null,
-        });
-      }
-
-      res.status(200).json({
-        variant: "success",
-        msg: "Category found",
-        payload: category,
-      });
-    } catch (error) {
-      res.status(500).json({
-        variant: "error",
-        msg: "Server error",
-        payload: null,
-      });
-    }
-  }
-
-  async createCategory(req, res) {
-    try {
-      const { error } = validateCategory(req.body);
+      const { error } = validateComment(req.body);
       if (error) return res.status(400).json({ msg: error.details[0].message });
 
-      let existingTitle = await Category.findOne({ title: req.body.title });
+      let existingTitle = await Comment.findOne({ title: req.body.title });
       if (existingTitle) {
         return res.status(400).json({
           variant: "error",
@@ -63,7 +38,7 @@ class CategoriesController {
         });
       }
 
-      const category = await Category.create({
+      const comment = await Comment.create({
         ...req.body,
         adminId: req.admin._id,
       });
@@ -72,13 +47,15 @@ class CategoriesController {
 
       res.status(201).json({
         variant: "success",
-        msg: "Category created successfully",
+        msg: "comment created successfully",
         payload: {
-          category,
+          comment,
           createdBy: admin,
         },
       });
     } catch (error) {
+      console.log(error);
+      
       res.status(500).json({
         variant: "error",
         msg: "Server error",
@@ -87,17 +64,17 @@ class CategoriesController {
     }
   }
 
-  async updateCategory(req, res) {
+  async updateComment(req, res) {
     try {
-      const { error } = validateCategory(req.body);
+      const { error } = validateComment(req.body);
       if (error) return res.status(400).json({ msg: error.details[0].message });
 
-      let existingCategory = await Category.findOne({ title: req.body.title });
-      console.log(existingCategory);
+      let existingComment = await Comment.findOne({ title: req.body.title });
+      console.log(existingComment);
 
       if (
-        existingCategory &&
-        existingCategory._id.toString() !== req.params.id.toString()
+        existingComment &&
+        existingComment._id.toString() !== req.params.id.toString()
       ) {
         return res.status(400).json({
           msg: "This title already exists",
@@ -106,29 +83,29 @@ class CategoriesController {
         });
       }
 
-      const category = await Category.findByIdAndUpdate(
+      const comment = await Comment.findByIdAndUpdate(
         req.params.id,
         req.body,
         { new: true }
       );
 
-      if (!category) {
+      if (!comment) {
         return res.status(404).json({
           variant: "error",
-          msg: "Category not found",
+          msg: "Comment not found",
           payload: null,
         });
       }
 
-      const admin = await Admins.findById(category.adminId).select(
+      const admin = await Admins.findById(comment.adminId).select(
         "name email"
       );
 
       res.status(200).json({
         variant: "success",
-        msg: "Category updated successfully",
+        msg: "Comment updated successfully",
         payload: {
-          category,
+          comment,
           updatedBy: admin,
         },
       });
@@ -141,27 +118,27 @@ class CategoriesController {
     }
   }
 
-  async deleteCategory(req, res) {
+  async deleteComment(req, res) {
     try {
-      const category = await Category.findByIdAndDelete(req.params.id);
+      const comment = await Comment.findByIdAndDelete(req.params.id);
 
-      if (!category) {
+      if (!comment) {
         return res.status(404).json({
           variant: "error",
-          msg: "Category not found",
+          msg: "Comment not found",
           payload: null,
         });
       }
 
-      const admin = await Admins.findById(category.adminId).select(
+      const admin = await Admins.findById(comment.adminId).select(
         "name email"
       );
 
       res.status(200).json({
         variant: "success",
-        msg: "Category deleted successfully",
+        msg: "Comment deleted successfully",
         payload: {
-          category,
+          comment,
           deletedBy: admin,
         },
       });
@@ -175,4 +152,4 @@ class CategoriesController {
   }
 }
 
-export default new CategoriesController();
+export default new CommentsController();
